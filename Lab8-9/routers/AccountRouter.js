@@ -2,6 +2,7 @@ const express = require('express')
 const Router = express.Router()
 const {validationResult} = require('express-validator')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 const Account = require('../models/AccountModel')
 
@@ -19,12 +20,14 @@ Router.post('/login', loginValidator,  (req,res) => {
      //Kiểm tra có bất kì lỗi nào được trả về hay không
      if (result.errors.length === 0){
           let {email, password} = req.body
+          let account = undefined
 
           Account.findOne({email:email})
           .then(acc => { 
                if (!acc){ 
                     throw new Error("Email không tồn tại")
                }
+               account = acc
 
                return bcrypt.compare(password, acc.password)
           })
@@ -34,12 +37,24 @@ Router.post('/login', loginValidator,  (req,res) => {
                          code:3, 
                          message: "Đăng nhập thất bại, mật khẩu không chính xác"
                     })
-                    
                }
-               return res.status(200).json({ 
-                    code: 0, 
-                    message: "Đăng nhập thành công"
+               const {JWT_SECRET} = process.env.JWT_SECRET
+               
+
+               jwt.sign({
+                    email: account.email,
+                    fullname: account.fullname
+               }, JWT_SECRET, { 
+                    expiresIn: '1h'
+               }, (err, token) => {
+                    if (err) throw err
+                    return res.json({ 
+                         code:0, 
+                         message: "Đăng nhập thành công", 
+                         token: token
+                    })
                })
+               
           })
           .catch(e => { 
                return res.status(401).json({
