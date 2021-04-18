@@ -1,0 +1,263 @@
+<!--
+  Created by: Mai Van Manh
+  Date: 11/02/2020
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Trò chuyện</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    .user {
+      display: flex;
+      align-items: center;
+      padding: 12px 24px;
+      cursor: pointer;
+    }
+
+    .user:nth-child(odd) {
+      background-color: #F4F5F7;
+    }
+
+    .user:hover {
+      background-color: #E6EFFF;
+      transition: 0.3s;
+    }
+
+    .avatar {
+      font-weight: bold;
+      font-size: 1.5rem;
+      background-color: deepskyblue;
+      width: 50px;
+      height: 50px;
+      margin-right: 16px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white
+    }
+
+    .user-info {
+      height: 50px;
+      flex-grow: 1;
+    }
+
+    .user-name {
+      font-size: 1.1rem;
+
+    }
+
+    .user-info .online {
+      font-size: 0.9rem;
+      color: rgb(99, 99, 99)
+    }
+
+    .user .status {
+      width: 90px;
+      text-align: center;
+    }
+
+    .user:hover {
+      background-color: #E6EFFF;
+    }
+
+    .user:hover .avatar {
+      background-color: rgb(7, 142, 204);
+      transition: 0.3s;
+    }
+
+    .user:hover .user-name {
+      font-weight: 450;
+      transition: 0.3s;
+    }
+
+    .conversation {
+      background-color: rgb(158, 158, 158);
+      padding: 24px;
+      height: 75vh;
+      overflow: auto;
+    }
+    
+    .message {
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      width: max-content;
+      max-width: 60%;
+      font-size: 0.9rem;
+    }
+
+    .img-message {
+      border-radius: 8px;
+      margin-bottom: 12px;
+      width: max-content;
+      max-width: 50%;
+    }
+    .img-message img {
+      max-width: 100%;
+      border-radius: 12px;
+    }
+    .img-message img:hover {
+       opacity: 0.85;
+    }
+
+    .my-message {
+      border-radius: 12px;
+      background-color: #DBEAFE;
+    }
+    .my-message:hover {
+      background-color: #b4cbe9;
+      transition: 0.3s;
+    }
+
+    .their-message {
+      border-radius: 12px;
+      background-color: white;
+      margin-left: auto;
+      margin-right: 0;
+    }
+    .their-message:hover {
+      background-color: rgb(231, 231, 231);
+      transition: 0.3s;
+    }
+    .message .time {
+      margin-top: 2px;
+      display: block;
+      font-size: 0.8rem;
+      color: rgb(102, 102, 102);
+    }
+
+    .message-input {
+      border-top: 1px solid rgb(190, 190, 190);
+      display: flex;
+      position: relative;
+    }
+    .typing {
+        background-color: rgb(242, 251, 255);
+        border-radius: 4px;
+        padding: 4px 8px;
+        width: fit-content;
+        font-size: 0.7em;
+        position: absolute;
+        top: -25px;
+        left: 2px;
+    }
+
+    .message-input input[type="text"] {
+        flex-grow: 1;
+        border: none;
+        padding: 8px 16px;
+    }
+
+    .message-input input[type="text"]:focus {
+      border: none;
+      outline: none;
+      transition: 0.3s;
+    } 
+
+    .message-input a{
+      text-decoration: none;
+      padding: 8px;
+      margin: 8px;
+    }
+    .message-input a:hover{
+      background-color: rgb(215, 229, 255);
+      border-radius: 4px;
+    }
+
+    .user .actions {
+       color:rgb(161, 161, 161);
+       font-size: 1.2rem;
+    }
+    .user .actions i {
+       display: inline-block;
+        border-radius: 8px;
+       padding: 12px;
+    }
+    .user .actions i:hover {
+       display: inline-block;
+       color:rgb(128, 128, 128);
+       background-color: rgb(215, 229, 255);
+       transition: 0.3s;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-9">
+        <div class="rounded border mt-3 mb-3">
+          <div class="user">
+            <div class="avatar">C</div>
+            <div class="user-info">
+              <div class="user-name">Phạm Công Chánh</div>
+              <div class="online">Vừa mới truy cập</div>
+            </div>
+            <div class="actions">
+              <i class="fas fa-phone-alt"></i>
+              <i class="fas fa-video"></i>
+              <i class="fas fa-search"></i>
+            </div>
+          </div>
+          <div class="conversation">
+              <div class="message my-message">Ra quân chiến dịch Xuân tình nguyện năm 2021
+                <span class="time">08:59</span>
+              </div>
+              <div class="message my-message">Sáng ngày 28/01/2021, Hội sinh viên Trường Đại học Tôn Đức Thắng (TDTU) đã tổ chức lễ ra quân chiến dịch Xuân tình nguyện TDTU năm 2021.
+                <span class="time">08:59</span>
+              </div>
+              <div class="img-message my-message">
+                <img src="https://tdtu.edu.vn/sites/www/files/articles/2021/Jan/Xuan-tinh-nguyen/xuan_tinh_nguyen_2.jpg">
+              </div>
+              <div class="message their-message">OK! Rất rốt
+                <span class="time">08:59</span>
+              </div>
+              <div class="message their-message">Mình cũng sẽ đăng ký tham gia
+                <span class="time">08:59</span>
+              </div>
+              <div class="message their-message">Theo kế hoạch, chiến dịch diễn ra từ ngày 28/01 đến ngày 06/02/2021, huy động khoảng 1.250 chiến sĩ với 2 mặt trận cấp trường và cấp cơ sở.
+                <span class="time">08:59</span>
+              </div>
+              <div class="message my-message">Đây là hoạt động truyền thống của Hội sinh viên TDTU trong suốt 13 năm qua.
+                <span class="time">08:59</span>
+              </div>
+              <div class="message my-message">Chúc mọi người năm mới vui vẻ
+                <span class="time">08:59</span>
+              </div>
+              <div class="message their-message">Cám ơn mọi người
+                <span class="time">08:59</span>
+              </div>
+              <div class="message their-message">Mình cũng chúc mọi người năm mới phát tài
+                <span class="time">08:59</span>
+              </div>
+              <div class="img-message their-message">
+                <img src="https://media.truyenhinhdulich.vn/upload/news/2300_binh_phuoc_khai_mac_duong_hoa_xuan_tet_ky_hoi.jpg">
+              </div>
+          </div>
+          <div class="message-input">
+            <div class="typing">Phạm Công Chánh đang soạn tin...</div>
+            <input type="text" placeholder="Nhập tin nhắn">
+            <a href="#">Gửi</a>
+          </div>
+        </div>
+     
+      </div>
+    </div>
+
+  
+</body>
+
+</html>

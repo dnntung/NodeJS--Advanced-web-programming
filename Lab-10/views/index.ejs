@@ -1,0 +1,277 @@
+<!--
+  Created by: Mai Van Manh
+  Date: 11/02/2020
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Danh sách người dùng</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css    ">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    .user {
+      display: flex;
+      align-items: center;
+      padding: 12px 24px;
+      cursor: pointer;
+    }
+
+    .user:nth-child(odd) {
+      background-color: #F4F5F7;
+    }
+
+    .user:hover {
+      background-color: #E6EFFF;
+      transition: 0.3s;
+    }
+
+    .avatar {
+      font-weight: bold;
+      font-size: 1.5rem;
+      background-color: deepskyblue;
+      width: 50px;
+      height: 50px;
+      margin-right: 16px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white
+    }
+
+    .user-info {
+      height: 50px;
+      flex-grow: 1;
+    }
+
+    .user-name {
+      font-size: 1.1rem;
+    }
+
+    .user-info .online {
+      font-size: 0.9rem;
+      color: rgb(99, 99, 99)
+    }
+
+    .user .status {
+      width: 90px;
+      text-align: center;
+    }
+
+    .user:hover {
+      background-color: #E6EFFF;
+    }
+
+    .user:hover .avatar {
+      background-color: rgb(7, 142, 204);
+      transition: 0.3s;
+    }
+
+    .user:hover .user-name {
+      font-weight: 450;
+      transition: 0.3s;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-7">
+        <div class="rounded border mt-5 mb-3">
+          <h4 class="text-primary text-center my-5">Danh sách người dùng trực tuyến</h4>
+          <p style="padding: 0 24px">Số người online: <strong id="online-count" class="badge badge-danger badge-pill">0</strong></p>
+          <div id='user-list' class="people">
+            
+          </div>
+        </div>
+        <p class="small">Danh sách này cần được cập nhật tự động mỗi khi có người dùng đăng nhập hoặc đăng xuất/thoát.
+          Ngoài ra trạng thái của mỗi người dùng cũng cần được cập nhật mỗi khi họ tham gia hoặc rời một cuộc trò
+          chuyện.</p>
+        <p class="small">Để cho đơn giản, trang web chỉ cần hỗ trợ với mỗi người vào một thời điểm, không thể chat với người có trạng thái là <strong>đang bận</strong>.</p>
+      </div>
+    </div>
+
+    <div id="online-notification" class="alert alert-success d-inline position-fixed small" style="bottom: 20px; left: 20px">
+      <strong>Trần Quang Trí</strong> vừa mới online
+    </div>
+    <div id="offline-notification" class="alert alert-danger d-inline position-fixed small" style="bottom: 20px; right: 20px">
+      <strong>Trần Quang Trí</strong> đã thoát khỏi ứng dụng
+    </div>
+    <script>
+      let users = [];
+      let socket
+      let name 
+
+      window.onload = () => {
+        console.log('Mở kết nối tới server')
+        //Ẩn thông báo online offline khi trang vừa load
+        $('#online-notification').fadeTo(10,0)
+        $('#offline-notification').fadeTo(10,0)
+
+        socket = io() //kết nổi tới server
+        socket.on('connect', handleConnectionSuccess)
+        socket.on('disconnect', () => console.log('Đã ngắt kết nối với server'))
+        socket.on('error', e => console.log(`Lỗi kết nối: ${e.message}`))
+        
+        
+        /*Xử lí sự kiện gửi và nhận tin nhắn từ server và client
+        socket.on('message', m => {
+          console.log(`Đã nhận được tin nhắn mới: ${m}`)
+          
+          //Gửi tin nhắn từ client cho server
+          socket.send('Hello server! Client đây')
+        })
+        */
+
+        //Nhận và truyền danh sách users vào hàm handleListUsers()
+        socket.on('list-users', handleListUsers)
+
+        //Nhận và truyền thông tin user mới vào hàm handleNewUser()
+        socket.on('new-user', handleNewUser)
+
+        //Nhận và truyền thông tin user đã ngắt kết nối vào hàm handleLeftUser()
+        socket.on('user-leave', handleLeftUser)
+
+        socket.on('register-name', handleRegisteringUsername)
+      }
+
+      let handleListUsers = userList => {
+        console.log(`Đã nhận danh sách users từ server:`)
+
+        userList.forEach(user => {
+          console.log(user)
+
+          if (user.id !== socket.id) {
+            //thêm các user khác vào danh sách user (ngoại trừ bản thân)
+            users.push(user) 
+            
+            //Hiển thị giao diện của các user trong users 
+            displayUser(user)
+          }
+        })
+      }
+
+      let handleNewUser = newUser => {
+        console.log(`Một user mới đã kết nối:`)
+        console.log(newUser)
+
+        users.push(newUser) //thêm user mới vào danh sách
+      }
+
+      let handleLeftUser = leftUserId => {
+        let leftUser = users.find(user => user.id === leftUserId)
+        users = users.filter(user => user.id != leftUserId)
+        console.log(`User ${leftUserId} đã thoát`)
+
+        //Xóa user đã thoát ra khỏi giao diện người dùng 
+        removeUser(leftUserId)
+
+        //Hiển thị thông báo offline
+        notifyOffline(leftUser.name)
+      }
+
+      let handleConnectionSuccess = () => {
+        console.log('Đã kết nối thành công')
+
+        setTimeout(() => {
+          //Session storage là một chức năng có sẵn trong html5
+          //Chúng sẽ tự động mất đi khi chúng ta đóng tab, refresh vẫn giữ nguyên
+          name = sessionStorage.get('name')
+          if (name) {
+            console.log('Tên người dùng đã được đọc từ session storage')
+          }
+          else {
+            name = prompt('Nhập tên của bạn:')
+            sessionStorage.set('name', name)
+            console.log('Đã lưu tên người dùng mới vào session storage')
+          }
+
+          //Gửi tên người dùng cho server
+          socket.emit('register-name', name)
+
+          //Hiển thị tên vừa nhập trên tiêu đề trang web
+          window.title = name
+        }, 500)
+        
+      }
+
+      let handleRegisteringUsername = data => {
+        let {id, name} = data
+        let user = users.find(u => u.id == id)
+
+        if (!user) {
+          return console.log('Không tìm thấy user')
+        }
+
+        user.name = name
+        console.log(`Client ${user.id} đã đăng kí với username ${user.name}`)
+        
+        //Hiển thị giao diện các người dùng sau khi đã có tên
+        displayUser({
+          id: user.id,
+          name: user.name,
+          free: user.free, 
+          loginAt: user.loginAt
+        })
+
+        notifyOnline(user.name)
+      }
+      
+      let displayUser = (user) => {
+        let status = user.free?"Đang rảnh":"Đang bận"
+        let userDiv = $(`
+        <div id=${user.id} class="user">
+          <div class="avatar">${user.name[0]}</div>
+          <div class="user-info">
+            <div class="user-name">${user.name}</div>
+            <div class="online">Truy cập lúc: ${user.loginAt}</div>
+          </div>
+          <div class="status">
+            <div class="badge badge-${user.free?"success":"warning"} badge-pill">${status}</div>
+          </div>
+        </div>
+        `)
+
+        $('#user-list').append(userDiv)
+
+        //Cập nhật số người dùng online
+        $('#online-count').html($('#user-list .user').length)
+      }
+
+      //Xóa người dùng khỏi giao diện danh sách
+      let removeUser = id => {
+        $(`#${id}`).remove()
+        //Cập nhật số người dùng online
+        $('#online-count').html($('#user-list .user').length)
+      }
+
+      let notifyOnline = user => {
+        $('#online-notification strong').html(user)
+        
+        //Hiển thị thông báo người dùng online
+        $('#online-notification').fadeTo(2000,1)
+        setTimeout(() => $('#online-notification').fadeTo(2000,0))
+      }
+      let notifyOffline = user => {
+        $('#offline-notification strong').html(user)
+        
+        //Hiển thị thông báo người dùng online
+        $('#offline-notification').fadeTo(2000,1)
+        setTimeout(() => $('#offline-notification').fadeTo(2000,0))
+      }
+    </script>
+</body>
+
+</html>
