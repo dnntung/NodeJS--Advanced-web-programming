@@ -51,7 +51,12 @@ Router.post('/login', loginValidator,  (req, res) => {
                     return res.redirect('/user/login')
                 }else {
                     //delete results[0].password
-                    req.session.user = results[0]
+                    let user = results[0]
+                    user.userRoot = `${req.vars.root}/users/${user.email}`
+                    req.session.user = user
+
+                    //Đăng kí sử dụng thư mục của user để có thể tải về tập tin
+                    req.app.use(express.static(user.userRoot))
                     return res.redirect('/')
                 }
             }
@@ -104,8 +109,15 @@ Router.post('/register', registerValidator, (req, res) => {
                 return res.redirect('/user/register')
             }
             else if (result.affectedRows === 1) {
-                // đăng ký thành công
-                return res.redirect('/user/login')   
+                const {root} = req.vars //Lấy đường dẫn root nhận được từ index.js để sử dụng
+                const userDir = `${root}/users/${email}`
+
+                fs.mkdir(userDir, () => {
+                    // đăng ký thành công
+                    return res.redirect('/user/login')  
+                })
+
+                 
             }
             else {
                 req.flash('error', 'Đăng ký thất bại')

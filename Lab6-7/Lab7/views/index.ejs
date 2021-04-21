@@ -90,96 +90,29 @@
                 </tr>
             </thead>
             <tbody>
-               
+            <% files.forEach(file => { %>
                 <tr>
                     <td>
-                        <i class="fa fa-folder"></i>
-                        <a href="#">Document</a>
+                        <%- /*In HTML để render icon trong ejs thì dùng - thay vì =*/ 
+                        file.icon -%>
+                        <a href="<%= file.subPath %>"><%= file.name %></a>
                     </td>
-                    <td>Folder</td>
-                    <td>-</td>
-                    <td>02-12-2019</td>
+                    <td><%= file.type %></td>
+                    <td><%= file.size%></td>
+                    <td><%= file.lastModified%></td>
                     <td>
                         <span><i class="fa fa-download action"></i></button>
                             <span><i class="fa fa-edit action"></i></button>
                                 <span><i class="fa fa-trash action"></i></button>
                     </td>
                 </tr>
-                <tr>
-                    <td>
-                        <i class="fa fa-folder"></i>
-                        <a href="#">Video</a>
-                    </td>
-                    <td>Folder</td>
-                    <td>-</td>
-                    <td>02-12-2019</td>
-                    <td>
-                        <span><i class="fa fa-download action"></i></button>
-                            <span><i class="fa fa-edit action"></i></button>
-                                <span><i class="fa fa-trash action"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <i class="fa fa-folder"></i>
-                        <a href="#">Downloads</a>
-                    </td>
-                    <td>Folder</td>
-                    <td>-</td>
-                    <td>02-12-2019</td>
-                    <td>
-                        <span><i class="fa fa-download action"></i></button>
-                            <span><i class="fa fa-edit action"></i></button>
-                                <span><i class="fa fa-trash action"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <i class="fas fa-file-archive"></i>
-                        <a href="#">fontawesome-free-5.15.1-web.zip</a>
-                    </td>
-                    <td>Compressed file</td>
-                    <td>3.5 MB</td>
-                    <td>02-07-2020</td>
-                    <td>
-                        <span><i class="fa fa-download action"></i></button>
-                            <span><i class="fa fa-edit action"></i></button>
-                                <span><i class="fa fa-trash action"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <i class="fas fa-file"></i>
-                        <a href="#">Account.txt</a>
-                    </td>
-                    <td>Text Document</td>
-                    <td>18 KB</td>
-                    <td>11-02-2020</td>
-                    <td>
-                        <span><i class="fa fa-download action"></i></button>
-                            <span><i class="fa fa-edit action"></i></button>
-                                <span><i class="fa fa-trash action"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <i class="fas fa-file-image"></i>
-                        <a href="#">img101.png</a>
-                    </td>
-                    <td>JPG Image</td>
-                    <td>2.2 MB</td>
-                    <td>11-02-2020</td>
-                    <td>
-                        <span><i class="fa fa-download action"></i></button>
-                            <span><i class="fa fa-edit action"></i></button>
-                                <span><i class="fa fa-trash action"></i></button>
-                    </td>
-                </tr>
+            <% }) %>
+                
+                
             </tbody>
         </table>
         <div class="border rounded mb-3 mt-5 p-3">
             <h4>File upload</h4>
-            <form>
                 <div class="form-group">
                     <div class="custom-file">
                         <input type="file" class="custom-file-input" id="customFile">
@@ -188,7 +121,7 @@
                 </div>
                 <div class="form-group">
                     <div class="progress" style="height:5px">
-                        <div class="progress-bar bg-success" style="width:40%;height:10px"></div>
+                        <div id='progress-indicator' class="progress-bar bg-success" style="width:0%;height:10px"></div>
                     </div>
                 </div>
                 <p class="small">Người dùng chỉ được upload tập tin có kích thước tối đa là 20 MB. Các tập tin thực thi (*.exe, *.msi, *.sh) không được phép upload.</p>
@@ -198,8 +131,7 @@
                     <li>Khi đang diễn ra quá trình upload thì button <strong>Upload</strong> sẽ bị disabled.</li>
                     <li>Sau khi upload thành công thì progress bar được ẩn đi, file sẽ được hiển thị trong danh sách bên trên và button được enabled trở lại.</li>
                 </ul>
-                <button class="btn btn-success px-5">Upload</button>
-            </form>
+                <button id="uploadButton" class="btn btn-success px-5">Upload</button>
         </div>
 
         <div class="modal-example my-5">
@@ -319,6 +251,41 @@
             var fileName = $(this).val().split("\\").pop();
             $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
         });
+
+        $(document).ready(() => {
+            $('#uploadButton').click(() => {
+                let uploadFile = $('#customFile')[0]
+                if (!uploadFile.files.length > 0) {
+                    return alert('Vui lòng chọn tập tin cần upload')
+                }
+
+                let file = uploadFile.files[0]
+
+                let form = new FormData()
+                form.set('email', '<%= user.email %>')
+                form.set('path', '<%= dir %>')
+                form.set('attachment', file)
+
+                let xhr = new XMLHttpRequest()
+                xhr.open('POST', 'http://localhost:9090/upload', true)
+                xhr.addEventListener('load', e => {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        const json = JSON.parse(xhr.responseText)
+                        console.log(json)
+                    }
+                })
+
+                xhr.upload.addEventListener('progress', e => {
+                    let loaded = e.loaded
+                    let total = e.total
+                    let progress = Math.round(loaded * 100/total)
+
+                    $('#progress-indicator').width(progress + '%')
+                })
+
+                xhr.send(form)
+            })
+        })
     </script>
 
 </body>
