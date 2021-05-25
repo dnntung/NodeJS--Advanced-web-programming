@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 1</title>
+</head>
+<body>
+    <h2>Xem nội dung ảnh</h2>
+    <div>
+        <input type="text" id="url">
+        <button id="viewImage">Xem ảnh</button>
+    </div>
+    <div>
+        <a id="imageLink" download="myimage.jpg" href="#">
+            <img id="image" style="max-width: 50%; margin-top: 16px" src="https://web-nang-cao.herokuapp.com/lab1/tdtu1.jpg" alt="">
+        </a>
+    </div>
+    <script>
+        let url = document.querySelector("#url")
+        let btnView = document.getElementById("viewImage")
+        let image = document.getElementById("image")
+        let imageLink = document.getElementById("imageLink")
+
+        btnView.addEventListener("click", ()=> {
+            let link = url.value
+            url.value = ""
+            
+            loadImage(link)
+        })
+
+        function loadImage(url){ 
+            let xhr = new XMLHttpRequest(); 
+            xhr.responseType = "blob"
+            xhr.addEventListener("load", e => { 
+                if (xhr.readyState === 4 && xhr.status === 200){ 
+                    let data = xhr.response
+                    let object = URL.createObjectURL(data)
+                    image.src = object
+                    imageLink.href = object
+                }
+            })
+            //Khai bao method GET hoac POST
+            xhr.open("GET", url, true)
+            xhr.send();
+        }
+    </script>
+</body>
+</html>

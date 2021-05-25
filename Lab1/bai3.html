@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 1</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h2>Xem nội dung ảnh</h2>
+    <div>
+        <input type="text" id="url">
+        <button id="viewImage">Xem ảnh</button>
+    </div>
+    <div>
+        <a id="imageLink" download="myimage.jpg" href="#">
+            <img id="image" style="max-width: 50%; margin-top: 16px" src="https://web-nang-cao.herokuapp.com/lab1/tdtu1.jpg" alt="">
+        </a>
+    </div>
+    <script>
+        let url = document.querySelector("#url")
+        let btnView = document.getElementById("viewImage")
+        let image = document.getElementById("image")
+        let imageLink = document.getElementById("imageLink")
+
+        btnView.addEventListener("click", async ()=> {
+            let link = url.value
+            url.value = ""
+            
+
+            //Load ảnh bằng async và await
+            try{
+                let blob =  await loadImage(link)
+                let obj = URL.createObjectURL(blob)
+
+                image.src = obj
+                imageLink.href = obj
+            }catch (e){
+                console.log(e)
+            }
+
+            //Load ảnh bằng promise thông qua loadImage()
+            /*loadImage(link).then(blob => { 
+                let obj = URL.createObjectURL(blob)
+
+                image.src = obj
+                imageLink.href = obj
+            }).catch( e=> console.log(e))*/
+        })
+
+        function loadImage(url){ 
+            return new Promise((resolve, reject) => { 
+                let xhr = new XMLHttpRequest(); 
+                xhr.responseType = "blob"
+                xhr.open("GET", url, true)
+                xhr.onload = () => { 
+                    if (xhr.readyState === 4){ 
+                        if (xhr.status === 200){ 
+                            let response = xhr.response
+
+                            resolve(response)
+                        }
+                    }
+                    else{ 
+                        reject("Server response with code != 200: ${xhr.status}")
+                    }
+                }
+                xhr.onerror = e => reject(e)
+                xhr.send()
+            })
+            
+        }
+    </script>
+</body>
+</html>

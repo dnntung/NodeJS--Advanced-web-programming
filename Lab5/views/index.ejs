@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Danh sách sản phẩm</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container my-3">
+    <h4 class="my-5 text-primary text-center text-uppercase">Danh sách người dùng</h4>
+    <a class="btn btn-success btn-sm my-4" href="/add">Thêm người dùng</a>
+    <p>Chọn một người dùng để xem chi tiết</p>
+    <table class="table table-striped border">
+        <thead>
+        <tr>
+            <th>STT</th>
+            <th>Họ và tên</th>
+            <th>Giới tính</th>
+            <th>Tuổi</th>
+            <th>Email</th>
+            <th>Thao tác</th>
+        </tr>
+        </thead>
+        <tbody>
+            <% 
+                let count = 0
+                users.forEach(u => { 
+                    count+= 1 
+            %>
+                <tr id="<%= u.id %>">
+                    <td><%= count %></td>
+                    <td><a href="#"><%= u.name  %></a></td>
+                    <td><%= u.gender %></td>
+                    <td><%= u.age %></td>
+                    <td><%= u.email %></td>
+                    <td>
+                        <button data-id="<%= u.id %>" data-name="<%= u.name %>" data-age="<%= u.age %>" data-gender="<%= u.gender %>" data-email="<%= u.email %>" class="btn btn-sm btn-outline-primary">Chỉnh sửa</button>
+                        <button data-id="<%= u.id %>" data-name="<%= u.name %>" class="btn btn-sm btn-outline-danger">Xóa</button>
+                    </td>
+                </tr>
+            <% }) %> 
+        </tbody>
+    </table>
+    <p>Tổng số người dùng: <strong class="text-danger"><%= count %></strong></p>
+</div>
+
+<div id="flash-alert" style="display: none" class=" alert alert-success text-center w-25 mx-auto my-3">
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+    <span id="alert-message">Đã xóa người dùng <strong id="deleted-user-name"></strong></span>
+</div>
+
+
+<!-- Confirm delete -->
+<div class="modal fade" id="confirm-del-dialog">
+    <div class="modal-dialog ">
+      <div class="modal-content">
+      
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">Xóa người dùng</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <!-- Modal body -->
+        <div class="modal-body">
+          Bạn có chắc rằng muốn xóa <strong id="del-user-name"></strong>?
+        </div>
+        
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button data-id="???"type="button" id="confirm-del-btn" class="btn btn-danger">Xóa</button>
+          <button type="button" class="btn btn-dark"  data-dismiss="modal">Đóng</button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+<!-- End Confirm delete -->
+
+
+<!-- Update user -->
+<div id="update-dialog" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+      
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">Cập nhật thông tin người dùng</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <!-- Modal body -->
+        <div class="modal-body">
+            
+                <div class="form-group">
+                    <label for="user">Họ tên</label>
+                    <input value="Trần Minh Trí" class="form-control" type="text" placeholder="Nhập tên người dùng" id="name" name="name">
+                </div>
+                <div class="form-group">
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input checked type="radio" class="custom-control-input" id="gender-male" name="gender">
+                        <label class="custom-control-label" for="gender-male">Nam</label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" class="custom-control-input" id="gender-female" name="gender">
+                        <label class="custom-control-label" for="gender-female">Nữ</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="age">Tuổi</label>
+                    <input value="20" maxlength="3" class="form-control" type="number" placeholder="Nhập tuổi" min="18" max="100" id="age" name="age">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input value="tri@gmail.com" class="form-control" type="text" placeholder="Nhập email" id="email" name="email">
+                </div>
+                <div style="display: none" class="alert alert-danger" id="validate-update">
+                    Vui lòng nhập đầy đủ thông tin
+                </div>
+            
+        </div>
+        
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="confirm-update-btn">Cập nhật</button>
+          <button type="button" class="btn btn-dark" data-dismiss="modal">Đóng</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+<!-- End Update user -->
+
+
+<script>
+    let delUser = ""
+
+    $('.btn-outline-danger').click(e => { 
+        let user = e.target
+
+        $('#confirm-del-dialog').modal('show')
+
+        delUser= user.dataset.name
+        $('#del-user-name').html(delUser)
+        $('#confirm-del-btn').attr('data-id',user.dataset.id)
+    })
+
+    $('#confirm-del-btn').click(e => { 
+        $('#confirm-del-dialog').modal("hide")
+
+        let user = e.target
+        console.log(user.dataset.id)
+
+        fetch("http://localhost:8080/delete/"+user.dataset.id, {
+            method: "POST"
+        })
+        .then(res => res.json())
+        .then(json => { 
+            console.log(json)
+            if (json.code === 0){ 
+                $(`tr#${user.dataset.id}`).remove()
+
+                $('#deleted-user-name').html(delUser)
+                $('#flash-alert').show()
+
+                setTimeout(() => {
+                    $('#flash-alert').fadeOut(2000)
+                }, 1000);
+            }
+        })
+        .catch(e => console.log(e))
+    })
+
+    $('.btn-outline-primary').click(e => { 
+        let user = e.target
+
+        $('#update-dialog').modal("show")
+
+        $('#name').val(user.dataset.name)
+        $('#email').val(user.dataset.email)
+        $('#age').val(user.dataset.age)
+        if (user.dataset.gender === "male"){ 
+            $('#gender-male').prop("checked", true)
+        }
+        else{ 
+            $('#gender-female').prop("checked", true)
+        }
+
+        $('#confirm-update-btn').attr("data-id", user.dataset.id)
+    })
+
+    $('#confirm-update-btn').click(e => { 
+        let user = e.target
+        let id = user.dataset.id
+
+        if ($('#name').val() && $('#email').val() && $('#age').val() && $('#email').val() && ($('#gender-male').is(':checked') || $('#gender-female').is(':checked'))){ 
+            let name = $('#name').val()
+            let gender = $('#gender-male').is(':checked')?"male":"female"
+            let email = $('#email').val()
+            let age = $('#age').val()
+
+            console.log({id, name, gender, age, email})
+
+            fetch('http://localhost:8080/update', {
+                method: "POST", 
+                headers: { 
+                    "Content-Type":"application/json"
+                },
+                body: JSON.stringify({
+                    id: id,
+                    name: name,
+                    gender: gender,
+                    age: age,
+                    email: email
+                })
+            })
+            .then(res => res.json())
+            .then(json => {
+                console.log(json)
+                if (json.code === 0){ 
+                    $('#update-dialog').modal("hide")
+                    $('#alert-message').html(json.message)
+                    $('#flash-alert').show()
+
+                    setTimeout(() => {
+                        $('#flash-alert').fadeOut(2000)
+                    }, 1000);
+                }
+            })
+            .catch(e => { 
+                console.log(e)
+            })
+        }
+        else{ 
+            $("#validate-update").show()
+
+            setTimeout(() => {
+                $('#validate-update').fadeOut(2000)
+            }, 1000);
+        }
+
+    })
+</script>
+
+</body>
+</html>
